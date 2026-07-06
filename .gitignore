@@ -1,0 +1,13 @@
+.DS_Store
+.env
+.env.local
+.venv/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+node_modules/
+.next/
+dist/
+build/
+postgres-data/
+work/
