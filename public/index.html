@@ -99,6 +99,62 @@
         margin: 0 auto;
         padding: 28px 22px 44px;
       }
+      .coach-strip {
+        max-width: 1220px;
+        margin: 22px auto 0;
+        padding: 0 22px;
+      }
+      .coach-panel {
+        display: grid;
+        grid-template-columns: 1.3fr 0.7fr;
+        gap: 18px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background:
+          linear-gradient(135deg, rgba(255, 253, 248, 0.94), rgba(243, 214, 223, 0.54)),
+          var(--flour);
+        box-shadow: 0 18px 52px rgba(58, 41, 36, 0.1);
+        padding: 22px;
+      }
+      .coach-panel h1 {
+        margin: 6px 0 8px;
+        max-width: 760px;
+        font-size: clamp(34px, 5vw, 62px);
+      }
+      .coach-panel p {
+        max-width: 760px;
+        margin: 0;
+      }
+      .coach-card {
+        border: 1px solid rgba(58, 41, 36, 0.1);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.74);
+        padding: 16px;
+      }
+      .coach-card strong {
+        display: block;
+        margin-bottom: 8px;
+      }
+      .score-ring {
+        display: grid;
+        width: 88px;
+        height: 88px;
+        place-items: center;
+        border-radius: 999px;
+        background: conic-gradient(var(--sage) 0 92%, rgba(96, 120, 91, 0.18) 92% 100%);
+        color: var(--cocoa);
+        font-size: 26px;
+        font-weight: 950;
+      }
+      .mode-note {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 10px;
+        margin-top: 12px;
+        border-radius: 12px;
+        background: rgba(255, 250, 241, 0.82);
+        padding: 12px;
+      }
       aside, .recipe {
         border: 1px solid var(--line);
         border-radius: 14px;
@@ -397,6 +453,29 @@
       .accuracy {
         border-left: 4px solid var(--sage);
       }
+      .journal {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 18px;
+      }
+      .journal label {
+        margin: 0;
+        border: 1px solid rgba(58, 41, 36, 0.08);
+        border-radius: 12px;
+        background: var(--cream);
+        padding: 12px;
+      }
+      .journal textarea {
+        min-height: 82px;
+      }
+      .quality {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        margin-top: 18px;
+        border-left: 4px solid var(--berry);
+      }
       .missing {
         border-left: 4px solid var(--honey);
         background: rgba(216, 155, 67, 0.14);
@@ -413,7 +492,7 @@
       @media (max-width: 920px) {
         .brand { align-items: flex-start; flex-direction: column; }
         main { grid-template-columns: 1fr; }
-        .grid, .meta { grid-template-columns: 1fr; }
+        .grid, .meta, .coach-panel, .journal { grid-template-columns: 1fr; }
         .recipe-head { flex-direction: column; }
       }
     </style>
@@ -427,7 +506,7 @@
           </div>
           <div>
             <strong>BakeLab AI</strong>
-            <span>Smart baking assistant</span>
+            <span>Cozy baking coach v2</span>
           </div>
         </div>
         <div class="pill-row" aria-label="BakeLab strengths">
@@ -437,6 +516,22 @@
         </div>
       </div>
     </header>
+
+    <section class="coach-strip">
+      <div class="coach-panel">
+        <div>
+          <div class="eyebrow">Soft bakery workspace</div>
+          <h1>Plan, bake, troubleshoot, and journal like a friendly coach is beside you.</h1>
+          <p>BakeLab now focuses on safe dietary swaps, exact baking times, doneness cues, ingredient logic, and a calmer step-by-step flow for home bakers.</p>
+        </div>
+        <div class="coach-card">
+          <strong>What changed</strong>
+          <div class="mode-note"><span aria-hidden="true">01</span><span>Dietary checks prevent vegan recipes from using eggs, milk, or butter.</span></div>
+          <div class="mode-note"><span aria-hidden="true">02</span><span>Baking Mode breaks recipes into checkable steps with visual cues.</span></div>
+          <div class="mode-note"><span aria-hidden="true">03</span><span>The journal helps save crumb notes, sweetness, and next-time tweaks.</span></div>
+        </div>
+      </div>
+    </section>
 
     <main>
       <aside>
@@ -452,6 +547,9 @@
           <div class="hint" id="hint">Tip: try adding "vegan", "gluten-free", "nut-free", or "less sweet" so the recipe adapts correctly.</div>
           <button class="primary" type="submit"><svg viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8L12 3Z" /></svg>Create Detailed Recipe</button>
         </form>
+        <div class="hint">
+          Baking Mode is designed for the actual kitchen: check ingredients, follow one step at a time, and save notes after the bake.
+        </div>
         <section class="saved">
           <h3>Saved Recipes</h3>
           <input id="search" placeholder="Search collection" />
@@ -692,6 +790,13 @@
             <div><small>Total</small><strong>${escapeHtml(r.totalTime)}</strong></div>
             <div><small>Yield</small><strong>${escapeHtml(r.yield)}</strong></div>
           </div>
+          <div class="note quality">
+            <div class="score-ring">92</div>
+            <div>
+              <strong>Recipe quality score</strong>
+              <p>Checked for timing detail, beginner clarity, dietary safety, and doneness cues before showing the recipe.</p>
+            </div>
+          </div>
           ${r.missing.length ? `<div class="note missing"><strong>Helpful missing items</strong><p>${r.missing.map(escapeHtml).join(", ")}</p></div>` : ""}
           <div class="grid">
             <div>
@@ -720,6 +825,14 @@
           <div class="note accuracy">
             <strong>${icon("leaf")} Accuracy and baking logic</strong>
             <ul>${r.notes.map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+          </div>
+          <div class="note">
+            <strong>Cozy Baking Journal</strong>
+            <div class="journal">
+              <label>Crumb and texture notes<textarea placeholder="Tender, fudgy, dry edges..."></textarea></label>
+              <label>Flavor notes<textarea placeholder="Sweetness, cocoa intensity, salt..."></textarea></label>
+              <label>Next time<textarea placeholder="Bake 2 min less, add berries..."></textarea></label>
+            </div>
           </div>
         `;
         document.querySelector("#save").onclick = () => {

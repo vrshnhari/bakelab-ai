@@ -1,60 +1,73 @@
 # BakeLab AI
 
-BakeLab AI is a cozy, AI-powered baking assistant for home bakers. It helps users generate detailed recipes, bake from pantry ingredients, improve existing recipes, respect dietary restrictions, and save notes in a baking journal.
+An AI-powered baking assistant for home bakers. BakeLab helps users turn pantry ingredients into recipe ideas, generate custom bakes, improve existing recipes, and save favorites.
 
-## What It Demonstrates
+## MVP Features
 
-- Full-stack architecture with a Next.js frontend and FastAPI backend.
-- AI recipe generation with structured recipe responses.
-- Dietary guardrails for vegan, gluten-free, dairy-free, egg-free, nut-free, and reduced-sugar requests.
-- Rate limiting for AI endpoints.
-- PostgreSQL/Supabase-ready saved recipe storage with local JSON fallback.
-- A polished static Vercel preview for quick portfolio demos.
-
-## Core Features
-
-- Pantry Assistant: enter ingredients and get a recipe with missing items highlighted.
-- Recipe Generator: describe a bake and receive ingredients, equipment, timing, temperature, doneness cues, and difficulty.
-- Recipe Improver: paste a recipe and request changes like vegan, less sweet, fudgier, or healthier.
-- Baking Mode: check off ingredients and steps while baking.
-- Cozy Baking Journal: save notes about crumb, flavor, mistakes, and next-time changes.
-- Recipe Quality Score: evaluates clarity, timing detail, beginner friendliness, and dietary safety.
+- Pantry Assistant: enter ingredients and get recipe ideas with missing items called out.
+- AI Recipe Generator: describe a bake and receive ingredients, equipment, steps, timing, doneness cues, storage notes, and difficulty.
+- Recipe Improver: paste a recipe and request changes like less sweet, gluten-free, fudgier, vegan, or healthier.
+- Saved Recipes: local JSON fallback or PostgreSQL/Supabase persistence with search, folders, tags, baking journal notes, update, and delete routes.
+- Baking Troubleshooter: text-based diagnostic endpoint that maps baking issues to likely causes and next-bake fixes.
+- Dietary Guardrails: backend validation detects vegan, dairy-free, egg-free, gluten-free, nut-free, and reduced-sugar requests.
+- Rate-Limited AI Routes: protects recipe generation endpoints from spam and runaway API costs.
+- Recipe Quality Scoring: deterministic backend checks for clarity, timing detail, dietary safety, and beginner friendliness.
 
 ## Tech Stack
 
 - Frontend: Next.js, React, TypeScript, Tailwind CSS
 - Backend: FastAPI, Python
-- Database: PostgreSQL/Supabase-ready
-- AI: OpenAI API-ready service with local fallback recipes
-- Deployment: Vercel for frontend/static preview, Render-ready backend
+- Database: JSON-backed local fallback plus PostgreSQL/Supabase support through SQLAlchemy
+- Auth: Clerk-ready frontend placeholder
+- AI: OpenAI API-ready backend service
+- Deployment: Vercel frontend, Render backend
 
 ## Project Structure
 
 ```txt
-frontend/   Next.js app, UI components, and API client
-backend/    FastAPI API, AI service, rate limiter, database models, tests
-public/     Static Vercel output used by the current public demo
+backend/           FastAPI app, AI services, validation, tests, and recipe storage
+frontend/          Next.js app, components, and API client
+frontend-preview/  Static polished demo used for simple Vercel deployment
 ```
 
-## Local Preview
+## Backend API
 
-For the static portfolio preview:
+The backend is the portfolio-grade part of the app. It exposes typed REST endpoints:
+
+```txt
+POST   /api/ai/pantry
+POST   /api/ai/generate
+POST   /api/ai/improve
+POST   /api/ai/troubleshoot
+GET    /api/recipes
+GET    /api/recipes/{recipe_id}
+POST   /api/recipes
+PATCH  /api/recipes/{recipe_id}
+DELETE /api/recipes/{recipe_id}
+```
+
+Recipe responses include both simple frontend-compatible fields and richer fields:
+
+- `ingredients` and `instructions` for basic rendering.
+- `detailed_ingredients` with substitutions and notes.
+- `timing` with prep, bake, rest, and total minutes.
+- `equipment`, `storage`, `yield_amount`, and `oven_temperature_f`.
+- `validation` showing detected/honored dietary restrictions and warnings.
+- `quality_score` with overall, clarity, timing, dietary safety, and beginner-friendliness scores.
+- `troubleshooting` suggestions for common baking failure modes.
+
+Saved recipe records can also include a `baking_journal` with gathered ingredients, completed steps, per-step notes, and an after-bake reflection.
+
+AI endpoints are rate-limited by client IP. The default is 10 AI requests per hour and can be changed with:
 
 ```bash
-python3 -m http.server 3000 --bind 127.0.0.1
+AI_RATE_LIMIT_REQUESTS=10
+AI_RATE_LIMIT_WINDOW_SECONDS=3600
 ```
 
-Open `http://127.0.0.1:3000`.
+## Local Setup
 
-For the full frontend:
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-For the backend:
+### Backend
 
 ```bash
 cd backend
@@ -62,16 +75,75 @@ python3 -m venv .venv-clean
 source .venv-clean/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-python run.py
+PYTHONDONTWRITEBYTECODE=1 python run.py
 ```
 
-The backend can run without an OpenAI key by returning polished fallback recipes. Add `OPENAI_API_KEY` in `backend/.env` to use the real model.
+The backend works without an OpenAI key by returning detailed fallback recipes. Add `OPENAI_API_KEY` to use OpenAI-backed generation.
 
-## Vercel
+```bash
+OPENAI_API_KEY=your_key_here
+OPENAI_MODEL=gpt-4.1-mini
+```
 
-The root `package.json`, `vercel.json`, `index.html`, and `public/index.html` support the existing static Vercel deployment. The fuller production architecture is:
+Saved recipes use local JSON when `DATABASE_URL` is blank. To use local PostgreSQL instead:
 
-1. Deploy `backend/` to Render.
-2. Add the Render API URL to Vercel as `NEXT_PUBLIC_API_URL`.
-3. Deploy `frontend/` from Vercel.
+```bash
+docker compose up -d postgres
+DATABASE_URL=postgresql://bakelab:bakelab@localhost:5432/bakelab
+```
 
+To use Supabase, copy the project database connection string from Supabase and set it as `DATABASE_URL`. The backend normalizes standard `postgres://` and `postgresql://` URLs for the installed `psycopg` driver.
+
+Run backend tests:
+
+```bash
+cd backend
+PYTHONDONTWRITEBYTECODE=1 PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 pytest -q
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Public Static Preview
+
+The polished demo version lives in `frontend-preview/` and can be deployed as a static site.
+
+### Netlify
+
+1. Go to https://app.netlify.com/drop
+2. Drag the `frontend-preview` folder into the page.
+3. Netlify will give you a public URL immediately.
+
+### GitHub Pages
+
+1. Push this repo to GitHub.
+2. In GitHub, open Settings -> Pages.
+3. Set the source to GitHub Actions.
+4. Push to the `main` branch. The included workflow publishes `frontend-preview/`.
+
+### Vercel
+
+Import the repo and set the output/static directory to `frontend-preview`.
+
+## GitHub Portfolio Notes
+
+This repo is designed to demonstrate more than API calling:
+
+- Clear product flows for real home-baking problems.
+- Typed frontend API client and reusable UI components.
+- REST backend with request/response schemas.
+- OpenAI service abstraction with structured output and fallback generation.
+- Dietary validation layer that catches conflicts like vegan recipes containing eggs or dairy.
+- In-memory rate limiter for AI routes, designed so it can later move to Redis for multi-server deployments.
+- Deterministic recipe quality scoring that evaluates AI output with app-owned rules.
+- Repository layer that can save recipes to local JSON or PostgreSQL/Supabase with the same API routes.
+- Cozy Baking Journal mode that turns recipe output into a guided bake-along workflow.
+- Backend tests for generation, saved recipes, and troubleshooting.

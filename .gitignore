@@ -2,6 +2,7 @@
 .env
 .env.local
 .venv/
+.venv-*/
 __pycache__/
 *.pyc
 *.tsbuildinfo
@@ -11,3 +12,4 @@ dist/
 build/
 postgres-data/
 work/
+backend/data/

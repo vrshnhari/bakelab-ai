@@ -8,6 +8,7 @@ const config: Config = {
         dough: "#fff8ed",
         cocoa: "#3d2821",
         berry: "#9f244d",
+        rosewater: "#fff1f4",
         pistachio: "#5d7c52",
         steel: "#34404a",
       },
@@ -20,4 +21,3 @@ const config: Config = {
 };
 
 export default config;
-

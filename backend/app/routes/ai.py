@@ -1,9 +1,17 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from app.schemas.ai import GeneratedRecipe, GenerateRecipeRequest, ImproveRecipeRequest, PantryRequest
-from app.services.ai_service import generate_recipe, improve_recipe, recommend_from_pantry
+from app.schemas.ai import (
+    GeneratedRecipe,
+    GenerateRecipeRequest,
+    ImproveRecipeRequest,
+    PantryRequest,
+    TroubleshooterRequest,
+    TroubleshooterResponse,
+)
+from app.services.ai_service import generate_recipe, improve_recipe, recommend_from_pantry, troubleshoot_bake
+from app.services.rate_limiter import rate_limit_ai
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(rate_limit_ai)])
 
 
 @router.post("/pantry", response_model=GeneratedRecipe)
@@ -20,3 +28,7 @@ def generate(payload: GenerateRecipeRequest) -> GeneratedRecipe:
 def improve(payload: ImproveRecipeRequest) -> GeneratedRecipe:
     return improve_recipe(payload)
 
+
+@router.post("/troubleshoot", response_model=TroubleshooterResponse)
+def troubleshoot(payload: TroubleshooterRequest) -> TroubleshooterResponse:
+    return troubleshoot_bake(payload)

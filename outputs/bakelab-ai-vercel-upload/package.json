@@ -1,0 +1,9 @@
+{
+  "name": "bakelab-ai",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "vercel dev",
+    "build": "mkdir -p public && cp index.html public/index.html"
+  }
+}

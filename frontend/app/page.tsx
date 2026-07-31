@@ -5,8 +5,8 @@ import type { ReactNode } from "react";
 import { BookOpen, ChefHat, ClipboardPen, Search, Sparkles } from "lucide-react";
 
 import { RecipeCard } from "@/components/RecipeCard";
-import { generateRecipe, improveRecipe, listSavedRecipes, pantryRecipe, saveRecipe } from "@/lib/api";
-import type { GeneratedRecipe, SavedRecipe } from "@/types/recipe";
+import { ApiError, generateRecipe, improveRecipe, listSavedRecipes, pantryRecipe, saveRecipe } from "@/lib/api";
+import type { BakingJournal, GeneratedRecipe, SavedRecipe } from "@/types/recipe";
 
 type Mode = "pantry" | "generate" | "improve";
 
@@ -40,6 +40,7 @@ export default function Home() {
   const [recipeText, setRecipeText] = useState("");
   const [goal, setGoal] = useState("make it less sweet and more tender");
   const [recipe, setRecipe] = useState<GeneratedRecipe | null>(null);
+  const [journal, setJournal] = useState<BakingJournal>(emptyJournal);
   const [savedRecipes, setSavedRecipes] = useState<SavedRecipe[]>([]);
   const [recipeSearch, setRecipeSearch] = useState("");
   const [loading, setLoading] = useState(false);
@@ -90,8 +91,9 @@ export default function Home() {
             ? await generateRecipe(prompt, dietaryNotes)
             : await improveRecipe(recipeText, goal);
       setRecipe(result);
-    } catch {
-      setStatus("Could not reach the BakeLab API. Make sure the FastAPI server is running on port 8000.");
+      setJournal(emptyJournal);
+    } catch (error) {
+      setStatus(error instanceof ApiError ? error.message : "Could not reach the BakeLab API. Make sure the FastAPI server is running on port 8000.");
     } finally {
       setLoading(false);
     }
@@ -102,11 +104,12 @@ export default function Home() {
     setSaving(true);
     setStatus("");
     try {
-      const saved = await saveRecipe(recipe);
+      const saved = await saveRecipe(recipe, journal);
       setSavedRecipes((currentRecipes) => [saved, ...currentRecipes]);
-      setStatus("Recipe saved to your collection.");
-    } catch {
-      setStatus("The recipe was generated, but saving failed. Check the backend server.");
+      setJournal(saved.baking_journal ?? emptyJournal);
+      setStatus("Recipe and baking journal saved to your collection.");
+    } catch (error) {
+      setStatus(error instanceof ApiError ? error.message : "The recipe was generated, but saving failed. Check the backend server.");
     } finally {
       setSaving(false);
     }
@@ -257,7 +260,10 @@ export default function Home() {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => setRecipe(item.recipe)}
+                    onClick={() => {
+                      setRecipe(item.recipe);
+                      setJournal(item.baking_journal ?? emptyJournal);
+                    }}
                     className="w-full rounded-md border border-cocoa/10 bg-dough/70 p-3 text-left transition hover:border-berry/30 hover:bg-dough"
                   >
                     <p className="text-sm font-bold text-cocoa">{item.title}</p>
@@ -273,11 +279,18 @@ export default function Home() {
           </div>
         </aside>
 
-        <RecipeCard recipe={recipe} onSave={handleSave} saving={saving} />
+        <RecipeCard recipe={recipe} journal={journal} onJournalChange={setJournal} onSave={handleSave} saving={saving} />
       </section>
     </main>
   );
 }
+
+const emptyJournal: BakingJournal = {
+  checked_ingredients: [],
+  completed_steps: [],
+  step_notes: {},
+  reflection: "",
+};
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
